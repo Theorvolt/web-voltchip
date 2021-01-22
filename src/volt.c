@@ -76,7 +76,7 @@ void startup(interpreter *ip) {
         ip->memory[val] = 0;
     }
     for(int i = 0; i < 80; ++i)
-            ip->memory[i] = fontset[i]; // load fontset into memory
+        ip->memory[i] = fontset[i]; // load fontset into memory
     clearScreen(ip);
 } 
 

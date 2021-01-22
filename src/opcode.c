@@ -3,14 +3,14 @@
 #include <stdio.h>
 #include <unistd.h>
 
-// 00EE
+// 00EE - Return from function
 void RET(interpreter *ip) {
     ip->SP--;
     ip->PC = ip->Stack[ip->SP]; // Set PC to stored address
     ip->PC += 2;
 }
 
-// 00E0
+// 00E0 - Clear screen
 void CLS(interpreter *ip) {
     clearScreen(ip);
 
@@ -21,19 +21,19 @@ void CLS(interpreter *ip) {
 
 }
 
-// 1nnn
+// 1nnn - Jump to address
 void JUMP(interpreter *ip, int addr) {
     ip->PC = addr;
 }
 
-// 2nnn
+// 2nnn - call function (subroutine)
 void FUNC(interpreter *ip, int addr) {
     ip->Stack[ip->SP] = ip->PC;
     ip->SP++;
     ip->PC = addr;
 }
 
-// 3xkk
+// 3xkk - if V_X == val: skip
 void SKIP_EQ(interpreter *ip, int reg1, int val) {
     if (ip->Vreg[reg1]==val) {
 
@@ -45,7 +45,7 @@ void SKIP_EQ(interpreter *ip, int reg1, int val) {
     }
 }
 
-// 4xkk
+// 4xkk - if V_X != val: skip
 void SKIP_NEQ(interpreter *ip, int reg1, int val) {
 
     if (ip->Vreg[reg1]!=val) {
@@ -56,7 +56,7 @@ void SKIP_NEQ(interpreter *ip, int reg1, int val) {
     }
 }
 
-// 5xy0
+// 5xy0 - if V_X == V_Y: skip
 void SKIPR_EQ(interpreter *ip, int reg1, int reg2) {
     if (ip->Vreg[reg1]==ip->Vreg[reg2]) {
         ip->PC+=4;
@@ -66,25 +66,25 @@ void SKIPR_EQ(interpreter *ip, int reg1, int reg2) {
     }
 }
 
-// 6xkk
+// 6xkk - V_X = val
 void LD_VAL(interpreter *ip, int reg1, int val) {
     ip->Vreg[reg1] = val;
     ip->PC+=2;
 }
 
-// 7xkk
+// 7xkk - V_X += val
 void ADD_VAL(interpreter *ip, int reg1, int val) {
     ip->Vreg[reg1] += val;
     ip->PC+=2;
 }
 
-// 8xy0
+// 8xy0 - V_X = V_Y
 void LD_REG(interpreter *ip, int reg1, int reg2) {
     ip->Vreg[reg1] = ip->Vreg[reg2];
     ip->PC+=2;
 }
 
-// 8xy1
+// 8xy1 - V_X |= V_Y
 void OR(interpreter *ip, int reg1, int reg2) {
 
     ip->Vreg[reg1] |= ip->Vreg[reg2];
@@ -94,19 +94,19 @@ void OR(interpreter *ip, int reg1, int reg2) {
 
 }
 
-// 8xy2
+// 8xy2 - V_X &= V_Y
 void AND(interpreter *ip, int reg1, int reg2) {
     ip->Vreg[reg1] &= ip->Vreg[reg2];
     ip->PC+=2;
 }
 
-// 8xy3
+// 8xy3 - V_X ^= V_Y
 void XOR(interpreter *ip, int reg1, int reg2) {
     ip->Vreg[reg1] ^= ip->Vreg[reg2];
     ip->PC+=2;
 }
 
-// 8xy4
+// 8xy4 - V_X += V_Y; carry
 void ADD_CARRY(interpreter *ip, int reg1, int reg2) {
     ip->Vreg[reg1] += ip->Vreg[reg2];
 
@@ -119,7 +119,7 @@ void ADD_CARRY(interpreter *ip, int reg1, int reg2) {
     ip->PC+=2;
 }
 
-// 8xy5
+// 8xy5 - V_X -= V_Y; account for negative
 void SUB_CARRY(interpreter *ip, int reg1, int reg2) {
 
     if ((int)ip->Vreg[reg1] - (int)ip->Vreg[reg2] >= 0) {
@@ -133,14 +133,14 @@ void SUB_CARRY(interpreter *ip, int reg1, int reg2) {
     ip->PC+=2;
 }
 
-// 8xy6
+// 8xy6 - V_X >>= 1
 void SHR(interpreter *ip, int reg1) {
     ip->Vreg[0xF] = ip->Vreg[reg1] & 0x1;
     ip->Vreg[reg1] >>= 1;
     ip->PC+=2;
 }
 
-// 8xy7
+// 8xy7 
 void SUB_NEG(interpreter *ip, int reg1, int reg2) {
     if (ip->Vreg[reg2] > ip->Vreg[reg1]) {
         ip->Vreg[0xF] = 1;
@@ -152,14 +152,14 @@ void SUB_NEG(interpreter *ip, int reg1, int reg2) {
     ip->PC+=2;
 }
 
-// 8xyE
+// 8xyE - V_X <<= 1
 void SHL(interpreter *ip, int reg1) {
     ip->Vreg[0xF] = ip->Vreg[reg1] >> 7;
     ip->Vreg[reg1] <<= 1;
     ip->PC+=2;
 }
 
-// 9xy0
+// 9xy0 - if V_X != V_Y: skip
 void SKIPR_NEQ(interpreter *ip, int reg1, int reg2) {
     if (ip->Vreg[reg1] != ip->Vreg[reg2]) {
         ip->PC+=4;   
@@ -169,24 +169,24 @@ void SKIPR_NEQ(interpreter *ip, int reg1, int reg2) {
     }
 }
 
-// Annn
+// Annn - I = addr
 void LOAD_I(interpreter *ip,int address) {
     ip->Ireg = address;
     ip->PC+=2;
 }
 
-// Bnnn
+// Bnnn - PC = V_0+addr
 void JUMP_V0(interpreter *ip,int address) {
     ip->PC = address+ip->Vreg[0x0];
 }
 
-// Cxkk
+// Cxkk - V_X = (rng() % 256) & val
 void RND(interpreter *ip, int reg1, int val) {
     ip->Vreg[reg1] = (rand() % 0x100) & (val);
     ip->PC+=2;
 }
 
-// Dxyn
+// Dxyn - Update internal rep of screen
 void DRAW(interpreter *ip, int reg1, int reg2, int nibble) {
     ip->Vreg[0xF] = 0;
     unsigned short p;
@@ -211,7 +211,7 @@ void DRAW(interpreter *ip, int reg1, int reg2, int nibble) {
     ip->PC+=2;
 }
 
-// Ex9E
+// Ex9E - If key is pressed: skip
 void SKIP_KEY(interpreter *ip, int reg1) {
     if (ip->key[ip->Vreg[reg1]] != 0) {
         ip->PC+=4;
@@ -221,7 +221,7 @@ void SKIP_KEY(interpreter *ip, int reg1) {
     }
 }
 
-// ExA1
+// ExA1 - If key is not pressed: skip
 void SKIPN_KEY(interpreter *ip, int reg1) {
     if (ip->key[ip->Vreg[reg1]] == 0) {
         ip->PC+=4;
@@ -231,13 +231,13 @@ void SKIPN_KEY(interpreter *ip, int reg1) {
     }
 }
 
-// Fx07
+// Fx07 - V_X = Delay
 void LD_DT(interpreter *ip, int reg1) {
     ip->Vreg[reg1] = ip->Delay;
     ip->PC+=2;
 }
 
-// FX0A
+// FX0A - V_0...V_N = Key_presses;
 void LD_KEY(interpreter *ip, int reg1) {
     unsigned char key_press = 0;
     for (int index=0; index<KEY_NUM; ++index) {
@@ -252,31 +252,31 @@ void LD_KEY(interpreter *ip, int reg1) {
     ip->PC+=2;
 }
 
-// Fx15
+// Fx15 - Delay = V_X
 void ST_DT(interpreter *ip, int reg1) {
     ip->Delay = ip->Vreg[reg1];
     ip->PC+=2;
 }
 
-// Fx18
+// Fx18 - Sound = V_X
 void LD_SD(interpreter *ip, int reg1) {
     ip->Sound = ip->Vreg[reg1];
     ip->PC+=2;
 }
 
-// Fx1E
+// Fx1E - I += V_X
 void ADD_I(interpreter *ip, int reg1) {
     if (ip->Ireg +ip->Vreg[reg1] > 0xFFF) {
         ip->Vreg[0xF] = 1;
     }
     else {
-        ip->Vreg[0xF] = 0;;
+        ip->Vreg[0xF] = 0;
     }
     ip->Ireg += ip->Vreg[reg1];
     ip->PC+=2;
 }
 
-// Fx29
+// Fx29 
 void LD_DIGIT(interpreter *ip, int reg1) {
     ip->Ireg = ip->Vreg[reg1] * 0x5;
     ip->PC+=2;

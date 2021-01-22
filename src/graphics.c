@@ -2,6 +2,9 @@
 #include "graphics.h"
 
 void drawScreen(interpreter *ip, SDL_Window *window, SDL_Texture *texture, SDL_Renderer *renderer) {
+    /*
+    After dFlag is toggled, recolor each bit and update the SDL interface.
+    */
     ip->dFlag = 0; // Deset draw flag
     uint32_t pixels[WIDTH*LENGTH];
 
